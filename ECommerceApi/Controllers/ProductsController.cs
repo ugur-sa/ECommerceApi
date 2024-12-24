@@ -1,5 +1,6 @@
-﻿using ECommerceApi.Domain.Entities;
-using ECommerceApi.Services;
+﻿using ECommerceApi.Application.Interfaces;
+using ECommerceApi.Domain.Entities;
+using ECommerceApi.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,58 +10,79 @@ namespace ECommerceApi.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly ProductsService _productsService;
+        private readonly IProductRepository _productRepository;
 
 
-        public ProductsController(ProductsService productsService)
+        public ProductsController(IProductRepository productRepository)
         {
-            _productsService = productsService;
+            _productRepository = productRepository;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllProducts()
         {
-            var products = await _productsService.GetAllProductsAsync();
+            var products = await _productRepository.GetAllAsync();
             return Ok(products);
         }
 
         [HttpGet("{Id}")]
         public async Task<IActionResult> GetProductById(Guid Id)
         {
-            var product = await _productsService.GetProductByIdAsync(Id);
+            var product = await _productRepository.GetByIdAsync(Id);
             if(product == null) return NotFound();
             return Ok(product);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateProduct([FromBody] Product product)
+        public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto productDto)
         {
 
             var newProduct = new Product
             {
                 Id = Guid.NewGuid(),
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
+                Name = productDto.Name,
+                Description = productDto.Description,
+                Price = productDto.Price,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
 
-            await _productsService.AddProductAsync(newProduct);
+            await _productRepository.AddAsync(newProduct);
             return CreatedAtAction(nameof(GetProductById), new { id = newProduct.Id }, newProduct);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateProduct([FromBody] Product product)
+        [HttpPatch("{Id}")]
+        public async Task<IActionResult> UpdateProduct(Guid Id, [FromBody] UpdateProductDto productDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            product.UpdatedAt = DateTime.Now;
+            var product = await _productRepository.GetByIdAsync(Id);
+            if (product == null)
+            {
+                return NotFound();
+            }
 
-            await _productsService.UpdateProductAsync(product);
+            if (productDto.Name != null)
+            {
+                product.Name = productDto.Name;
+            }
+
+            if (productDto.Description != null)
+            {
+                product.Description = productDto.Description;
+            }
+
+            if (productDto.Price.HasValue)
+            {
+                product.Price = productDto.Price.Value;
+            }
+
+            product.UpdatedAt = DateTime.UtcNow;
+
+            await _productRepository.UpdateAsync(product);
 
             return NoContent();
         }
@@ -74,7 +96,7 @@ namespace ECommerceApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            await _productsService.DeleteProductAsync(Id);
+            await _productRepository.DeleteAsync(Id);
             return NoContent();
         }
     }

@@ -1,7 +1,6 @@
 using ECommerceApi.Domain.Entities;
 using ECommerceApi.Infrastructure;
 using ECommerceApi.Infrastructure.Persistence;
-using ECommerceApi.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
@@ -16,8 +15,6 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddScoped<ProductsService>();
 
 builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
