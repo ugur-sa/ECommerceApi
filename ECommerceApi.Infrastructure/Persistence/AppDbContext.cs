@@ -1,7 +1,7 @@
-﻿using ECommerceApi.Models;
+﻿using ECommerceApi.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ECommerceApi.Data
+namespace ECommerceApi.Infrastructure.Persistence
 {
     public class AppDbContext : DbContext
     {

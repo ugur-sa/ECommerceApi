@@ -1,4 +1,4 @@
-﻿namespace ECommerceApi.Models
+﻿namespace ECommerceApi.Domain.Entities
 {
     public class Product
     {

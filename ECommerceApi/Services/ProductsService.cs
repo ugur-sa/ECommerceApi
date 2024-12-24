@@ -1,6 +1,6 @@
-﻿using ECommerceApi.Data;
-using ECommerceApi.Models;
-using ECommerceApi.Models.DTOs;
+﻿using ECommerceApi.Application.Interfaces;
+using ECommerceApi.Domain.Entities;
+using ECommerceApi.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,16 +10,16 @@ namespace ECommerceApi.Services
     public class ProductsService
     {
 
-        private readonly AppDbContext _dbContext;
+        private readonly IProductRepository _productRepository;
 
-        public ProductsService(AppDbContext context)
+        public ProductsService(IProductRepository productRepository)
         {
-            _dbContext = context;
+            _productRepository = productRepository;
         }
 
         public async Task<IEnumerable<Product>> GetAllProductsAsync()
         {
-            var products = await _dbContext.Products.ToListAsync();
+            var products = await _productRepository.GetAllAsync();
 
             return products;
         }
@@ -27,55 +27,24 @@ namespace ECommerceApi.Services
 
         public async Task<Product?> GetProductByIdAsync(Guid Id)
         {
-            var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == Id);
+            var product = await _productRepository.GetByIdAsync(Id);
 
             return product;
         }
 
         public async Task AddProductAsync(Product product)
         {
-            _dbContext.Products.Add(product);
-            await _dbContext.SaveChangesAsync();
+            await _productRepository.AddAsync(product);
         }
 
-        public async Task<bool> UpdateProductAsync(Guid Id, UpdateProductDto updateProductDto)
+        public async Task UpdateProductAsync(Product product)
         {
-            var product = await _dbContext.Products.FindAsync(Id);
-            if (product == null) return false;
-
-            if (IsMeaningful(updateProductDto.Name))
-            {
-                product.Name = updateProductDto.Name;
-            }
-
-            if (IsMeaningful(updateProductDto.Description))
-            {
-                product.Description = updateProductDto.Description;
-            }
-
-            if (IsMeaningful(updateProductDto.Price.ToString()))
-            {
-                product.Price = updateProductDto.Price;
-            }
-
-            product.UpdatedAt = DateTime.Now;
-            await _dbContext.SaveChangesAsync();
-            return true;
+            await _productRepository.UpdateAsync(product);
         }
 
-        public async Task<bool> DeleteProductAsync(Guid Id) 
+        public async Task DeleteProductAsync(Guid Id)
         {
-            var product = await _dbContext.Products.FindAsync(Id);
-            if (product == null) return false;
-
-            _dbContext.Products.Remove(product);
-            await _dbContext.SaveChangesAsync();
-            return true;
-        }
-
-        private static bool IsMeaningful(string? value)
-        {
-            return !string.IsNullOrWhiteSpace(value);
+            await _productRepository.DeleteAsync(Id);
         }
 
     }

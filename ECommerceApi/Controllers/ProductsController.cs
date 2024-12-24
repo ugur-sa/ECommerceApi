@@ -1,5 +1,4 @@
-﻿using ECommerceApi.Models;
-using ECommerceApi.Models.DTOs;
+﻿using ECommerceApi.Domain.Entities;
 using ECommerceApi.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,15 +33,15 @@ namespace ECommerceApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto productDto)
+        public async Task<IActionResult> CreateProduct([FromBody] Product product)
         {
 
             var newProduct = new Product
             {
                 Id = Guid.NewGuid(),
-                Name = productDto.Name,
-                Description = productDto.Description,
-                Price = productDto.Price,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
@@ -51,16 +50,17 @@ namespace ECommerceApi.Controllers
             return CreatedAtAction(nameof(GetProductById), new { id = newProduct.Id }, newProduct);
         }
 
-        [HttpPut("{Id}")]
-        public async Task<IActionResult> UpdateProduct(Guid Id, [FromBody] UpdateProductDto updateProductDto)
+        [HttpPut]
+        public async Task<IActionResult> UpdateProduct([FromBody] Product product)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var result = await _productsService.UpdateProductAsync(Id, updateProductDto);
-            if (!result) return NotFound();
+            product.UpdatedAt = DateTime.Now;
+
+            await _productsService.UpdateProductAsync(product);
 
             return NoContent();
         }
@@ -74,9 +74,7 @@ namespace ECommerceApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            var result = await _productsService.DeleteProductAsync(Id);
-            if (!result) return NotFound();
-
+            await _productsService.DeleteProductAsync(Id);
             return NoContent();
         }
     }
