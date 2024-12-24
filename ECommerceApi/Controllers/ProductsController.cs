@@ -25,10 +25,10 @@ namespace ECommerceApi.Controllers
             return Ok(products);
         }
 
-        [HttpGet("{Id}")]
-        public async Task<IActionResult> GetProductById(Guid Id)
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetProductById(Guid id)
         {
-            var product = await _productRepository.GetByIdAsync(Id);
+            var product = await _productRepository.GetByIdAsync(id);
             if(product == null) return NotFound();
             return Ok(product);
         }
@@ -51,15 +51,15 @@ namespace ECommerceApi.Controllers
             return CreatedAtAction(nameof(GetProductById), new { id = newProduct.Id }, newProduct);
         }
 
-        [HttpPatch("{Id}")]
-        public async Task<IActionResult> UpdateProduct(Guid Id, [FromBody] UpdateProductDto productDto)
+        [HttpPatch("{id:guid}")]
+        public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] UpdateProductDto productDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var product = await _productRepository.GetByIdAsync(Id);
+            var product = await _productRepository.GetByIdAsync(id);
             if (product == null)
             {
                 return NotFound();
@@ -89,14 +89,14 @@ namespace ECommerceApi.Controllers
 
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteProduct(Guid Id)
+        public async Task<IActionResult> DeleteProduct(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            await _productRepository.DeleteAsync(Id);
+            await _productRepository.DeleteAsync(id);
             return NoContent();
         }
     }
