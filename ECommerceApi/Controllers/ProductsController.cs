@@ -1,9 +1,11 @@
 ﻿using ECommerceApi.Application.Interfaces;
 using ECommerceApi.Domain.Entities;
-using ECommerceApi.Dtos;
+using ECommerceApi.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ECommerceApi.Application.Dtos.Product;
 
 namespace ECommerceApi.Controllers
 {
@@ -12,44 +14,89 @@ namespace ECommerceApi.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly IProductRepository _productRepository;
+        private readonly ICategoryRepository _categoryRepository;
 
-
-        public ProductsController(IProductRepository productRepository)
+        public ProductsController(IProductRepository productRepository, ICategoryRepository categoryRepository)
         {
             _productRepository = productRepository;
+            _categoryRepository = categoryRepository;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await _productRepository.GetAllAsync();
-            return Ok(products);
+
+            var productDtos = products.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category.Name
+            });
+
+            return Ok(productDtos);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetProductById(Guid id)
         {
             var product = await _productRepository.GetByIdAsync(id);
-            if(product == null) return NotFound();
-            return Ok(product);
+
+            if (product == null)
+                return NotFound();
+
+            var productDtoResult = new ProductDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                CategoryId = product.CategoryId,
+                CategoryName = product.Category.Name
+            };
+
+            return Ok(productDtoResult);
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto productDto)
         {
-
-            var newProduct = new Product
+            // Check if the category exists
+            var category = await _categoryRepository.GetByIdAsync(productDto.CategoryId);
+            if (category == null)
+                return BadRequest("Invalid category.");
+            
+            var product = new Product
             {
-                Id = Guid.NewGuid(),
                 Name = productDto.Name,
                 Description = productDto.Description,
                 Price = productDto.Price,
+                StockQuantity = productDto.StockQuantity,
+                CategoryId = category.Id,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
 
-            await _productRepository.AddAsync(newProduct);
-            return CreatedAtAction(nameof(GetProductById), new { id = newProduct.Id }, newProduct);
+            await _productRepository.AddAsync(product, category);
+
+            var productDtoResult = new ProductDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                CategoryId = product.CategoryId,
+                CategoryName = product.Category.Name
+            };
+
+            return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, productDtoResult);
         }
 
         [HttpPatch("{id:guid}")]
@@ -91,6 +138,7 @@ namespace ECommerceApi.Controllers
 
 
         [HttpDelete]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProduct(Guid id)
         {
             if (!ModelState.IsValid)

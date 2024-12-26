@@ -1,6 +1,5 @@
 ﻿using Azure.Core;
 using ECommerceApi.Domain.Entities;
-using ECommerceApi.Dtos;
 using ECommerceApi.Infrastructure.Persistence;
 using ECommerceApi.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using ECommerceApi.Application.Dtos.Auth;
 
 namespace ECommerceApi.Controllers
 {

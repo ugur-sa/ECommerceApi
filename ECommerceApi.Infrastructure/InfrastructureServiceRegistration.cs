@@ -19,6 +19,7 @@ namespace ECommerceApi.Infrastructure
                 options.UseSqlServer(connectionString));
 
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
 
             return services;
         }

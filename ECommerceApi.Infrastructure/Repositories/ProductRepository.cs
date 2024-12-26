@@ -1,4 +1,5 @@
-﻿using ECommerceApi.Application.Interfaces;
+﻿using ECommerceApi.Application.Dtos;
+using ECommerceApi.Application.Interfaces;
 using ECommerceApi.Domain.Entities;
 using ECommerceApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -21,16 +22,25 @@ namespace ECommerceApi.Infrastructure.Repositories
 
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
-            return await _dbContext.Products.ToListAsync();
+            return await _dbContext.Products
+                .Include(p => p.Category)
+                .Select(p => p)
+                .ToListAsync();
         }
 
         public async Task<Product?> GetByIdAsync(Guid id)
         {
-            return await _dbContext.Products.FindAsync(id);
+            return await _dbContext.Products
+                .Include(p => p.Category)
+                .Select(p => p)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task AddAsync(Product product)
+        public async Task AddAsync(Product product, Category category)
         {
+            _dbContext.Entry(category).State = EntityState.Unchanged;
+
+
             _dbContext.Products.Add(product);
             await _dbContext.SaveChangesAsync();
         }

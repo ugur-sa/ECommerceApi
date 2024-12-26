@@ -1,20 +1,20 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ECommerceApi.Dtos
+namespace ECommerceApi.Application.Dtos.Auth
 {
     public class RegisterUserDto
     {
         [Required]
         [StringLength(50)]
-        public string Username { get; set; } = String.Empty;
+        public string Username { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100)]
-        public string Password { get; set; } = String.Empty;
+        public string Password { get; set; } = string.Empty;
 
         [Required]
         [EmailAddress]
-        public string Email { get; set; } = String.Empty;
+        public string Email { get; set; } = string.Empty;
 
         public string? Role { get; set; }
     }
