@@ -1,6 +1,6 @@
 ﻿using Azure.Core;
 using ECommerceApi.Domain.Entities;
-using ECommerceApi.Dtos;
+using ECommerceApi.Application.Dtos;
 using ECommerceApi.Infrastructure.Persistence;
 using ECommerceApi.Services;
 using Microsoft.AspNetCore.Mvc;
