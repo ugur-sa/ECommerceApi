@@ -9,6 +9,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ECommerceApi.Application.Dtos.Auth;
+using ECommerceApi.Application.Interfaces;
+using ECommerceApi.Application.Dtos.Category;
+using ECommerceApi.Infrastructure.Repositories;
+using ECommerceApi.Application.Dtos.Product;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ECommerceApi.Controllers
 {
@@ -19,11 +24,62 @@ namespace ECommerceApi.Controllers
         private readonly string _secretKey = "MY_SUPER_SECRET_KEY_MY_SUPER_SECRET_KEY";
         private readonly AppDbContext _dbContext;
         private readonly PasswordHasherService _passwordHasher;
+        private readonly IUserRepository _userRepository;
 
-        public AuthController(AppDbContext context)
+        public AuthController(AppDbContext context, IUserRepository userRepository)
         {
             _dbContext = context;
             _passwordHasher = new PasswordHasherService();
+            _userRepository = userRepository;
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _userRepository.GetAllUsers();
+            var usersDtos = users.Select(u => new UserDto
+            {
+                Id = u.Id,
+                Email = u.Email,
+                Username = u.Username,
+                Role = u.Role
+            });
+
+            return Ok(usersDtos);
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetUserById(Guid id)
+        {
+            var user = await _userRepository.GetUserById(id);
+
+            if (user == null)
+                return NotFound();
+
+            var userDto = new UserDto
+            {
+                Id = id,
+                Email = user.Email,
+                Username = user.Username,
+                Role = user.Role
+            };
+
+            return Ok(userDto);
+        }
+
+        [HttpDelete("{id:guid}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteUser(Guid id)
+        {
+            var user = _userRepository.GetUserById(id);
+
+            if (user == null)
+                return NotFound();
+
+            await _userRepository.DeleteUser(id);
+
+            return Ok("User deleted successfully.");
         }
 
         [HttpPost("register")]
@@ -55,7 +111,7 @@ namespace ECommerceApi.Controllers
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
 
-            return Ok("User registered successfully.");
+            return Ok($"User registered successfully. {user.Id}");
         }
 
         [HttpPost("login")]

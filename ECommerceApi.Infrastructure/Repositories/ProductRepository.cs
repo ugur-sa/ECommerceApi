@@ -1,4 +1,5 @@
 ﻿using ECommerceApi.Application.Dtos;
+using ECommerceApi.Application.Dtos.Pagination;
 using ECommerceApi.Application.Interfaces;
 using ECommerceApi.Domain.Entities;
 using ECommerceApi.Infrastructure.Persistence;
@@ -20,12 +21,21 @@ namespace ECommerceApi.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Product>> GetAllAsync()
+        public async Task<PaginatedResponse<Product>> GetAllAsync(int pageNumber, int pageSize)
         {
-            return await _dbContext.Products
-                .Include(p => p.Category)
-                .Select(p => p)
+            //return await _dbContext.Products
+            //    .Include(p => p.Category)
+            //    .Select(p => p)
+            //    .ToListAsync();
+            var totalItems = await _dbContext.Products.CountAsync();
+
+            var items = await _dbContext.Products
+                .Include(p => p.Category) // Ensure the Category is loaded for mapping
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return new PaginatedResponse<Product>(items, totalItems, pageNumber, pageSize);
         }
 
         public async Task<Product?> GetByIdAsync(Guid id)

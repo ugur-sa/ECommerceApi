@@ -1,4 +1,6 @@
+using ECommerceApi.Application.Interfaces;
 using ECommerceApi.Infrastructure;
+using ECommerceApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -30,6 +32,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("DefaultConnection")!);
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddCors(options =>
 {

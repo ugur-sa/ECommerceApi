@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ECommerceApi.Application.Dtos.Product;
+using ECommerceApi.Application.Dtos.Pagination;
 
 namespace ECommerceApi.Controllers
 {
@@ -23,11 +24,11 @@ namespace ECommerceApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllProducts()
+        public async Task<IActionResult> GetAllProducts([FromQuery] PaginationParameters paginationParameters)
         {
-            var products = await _productRepository.GetAllAsync();
+            var products = await _productRepository.GetAllAsync(paginationParameters.PageNumber, paginationParameters.PageSize);
 
-            var productDtos = products.Select(p => new ProductDto
+            var productDtos = products.Data.Select(p => new ProductDto
             {
                 Id = p.Id,
                 Name = p.Name,
