@@ -12,6 +12,8 @@ namespace ECommerceApi.Infrastructure.Persistence
         public DbSet<User> Users { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+        public DbSet<ShoppingCartItem> ShoppingCartItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,14 +27,22 @@ namespace ECommerceApi.Infrastructure.Persistence
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<OrderItem>()
-            .HasOne(oi => oi.Order)
-            .WithMany(o => o.OrderItems)
-            .HasForeignKey(oi => oi.OrderId);
+                .HasOne(oi => oi.Order)
+                .WithMany(o => o.OrderItems)
+                .HasForeignKey(oi => oi.OrderId);
 
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Product)
                 .WithMany()
                 .HasForeignKey(oi => oi.ProductId);
+
+            modelBuilder.Entity<ShoppingCartItem>()
+                .HasKey(i => i.Id);
+
+            modelBuilder.Entity<ShoppingCartItem>()
+                .HasOne<ShoppingCart>()
+                .WithMany(c => c.Items)
+                .HasForeignKey(i => i.ShoppingCartId);
         }
     }
 }
