@@ -21,6 +21,21 @@ namespace ECommerceApi.Infrastructure.Repositories
 
         public async Task AddAsync(Order order)
         {
+            foreach (var orderItem in order.OrderItems)
+            {
+                var product = await _dbContext.Products.FindAsync(orderItem.ProductId);
+                if (product != null)
+                {
+                    if (product.StockQuantity < orderItem.Quantity)
+                    {
+                        throw new InvalidOperationException($"Not enough stock for product {product.Name}. Available: {product.StockQuantity}, Requested: {orderItem.Quantity}");
+                    }
+
+                    product.StockQuantity -= orderItem.Quantity;
+                    _dbContext.Products.Update(product);
+                }
+            }
+
             await _dbContext.Orders.AddAsync(order);
             await _dbContext.SaveChangesAsync();
         }

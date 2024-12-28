@@ -4,7 +4,6 @@ namespace ECommerceApi.Application.Dtos.Product
 {
     public class UpdateProductDto
     {
-        [Required]
         [StringLength(100)]
         public string? Name { get; set; } = string.Empty;
 
@@ -15,6 +14,7 @@ namespace ECommerceApi.Application.Dtos.Product
         public decimal? Price { get; set; }
 
         public int? StockQuantity { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
         public Guid? CategoryId { get; set; }
     }
 }

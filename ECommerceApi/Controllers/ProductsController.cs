@@ -35,6 +35,7 @@ namespace ECommerceApi.Controllers
                 Description = p.Description,
                 Price = p.Price,
                 StockQuantity = p.StockQuantity,
+                ImageUrl = p.ImageUrl,
                 CategoryId = p.CategoryId,
                 CategoryName = p.Category.Name
             });
@@ -57,6 +58,7 @@ namespace ECommerceApi.Controllers
                 Description = product.Description,
                 Price = product.Price,
                 StockQuantity = product.StockQuantity,
+                ImageUrl = product.ImageUrl,
                 CategoryId = product.CategoryId,
                 CategoryName = product.Category.Name
             };
@@ -80,6 +82,7 @@ namespace ECommerceApi.Controllers
                 Price = productDto.Price,
                 StockQuantity = productDto.StockQuantity,
                 CategoryId = category.Id,
+                ImageUrl = productDto.ImageUrl,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
@@ -93,6 +96,7 @@ namespace ECommerceApi.Controllers
                 Description = product.Description,
                 Price = product.Price,
                 StockQuantity = product.StockQuantity,
+                ImageUrl = product.ImageUrl,
                 CategoryId = product.CategoryId,
                 CategoryName = product.Category.Name
             };
@@ -123,6 +127,11 @@ namespace ECommerceApi.Controllers
             if (productDto.Description != null)
             {
                 product.Description = productDto.Description;
+            }
+
+            if (productDto.ImageUrl != null)
+            {
+                product.ImageUrl = productDto.ImageUrl;
             }
 
             if (productDto.Price.HasValue)

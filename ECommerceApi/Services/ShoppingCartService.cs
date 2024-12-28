@@ -29,6 +29,7 @@ namespace ECommerceApi.Services
                 UserId = userId,
                 Items = shoppingCart.Items.Select(i => new ShoppingCartItemDto
                 {
+                    Id = i.Id,
                     ProductId = i.ProductId,
                     ProductName = i.ProductName,
                     UnitPrice = i.UnitPrice,
@@ -90,6 +91,28 @@ namespace ECommerceApi.Services
                 shoppingCart.Items.Remove(item);
                 await _shoppingCartRepository.UpdateShoppingCartAsync(shoppingCart);
             }
+        }
+
+        public async Task UpdateShoppingCartItemQuantityAsync(Guid userId, Guid itemId, int quantity)
+        {
+            var shoppingCart = await _shoppingCartRepository.GetShoppingCartAsync(userId);
+            if (shoppingCart == null) throw new Exception("Shopping cart not found");
+
+            var cartItem = shoppingCart.Items.FirstOrDefault(item => item.Id == itemId);
+            if (cartItem == null) throw new Exception("Item not found in shopping cart");
+
+            if (quantity <= 0)
+            {
+                // Remove the item if the quantity is zero or less
+                shoppingCart.Items.Remove(cartItem);
+            }
+            else
+            {
+                // Update the item's quantity
+                cartItem.Quantity = quantity;
+            }
+
+            await _shoppingCartRepository.UpdateShoppingCartAsync(shoppingCart);
         }
     }
 }

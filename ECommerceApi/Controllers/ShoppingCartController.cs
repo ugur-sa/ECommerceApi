@@ -1,5 +1,6 @@
 ﻿using ECommerceApi.Application.Dtos.ShoppingCart;
 using ECommerceApi.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,6 +32,20 @@ namespace ECommerceApi.Controllers
             try
             {
                 await _shoppingCartService.AddItemToShoppingCartAsync(userId, itemDto);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("{userId:guid}/items/{itemId:guid}")]
+        public async Task<IActionResult> UpdateShoppingCartItemQuantity(Guid userId, Guid itemId, [FromBody] UpdateCartItemQuantityDto dto)
+        {
+            try
+            {
+                await _shoppingCartService.UpdateShoppingCartItemQuantityAsync(userId, itemId, dto.Quantity);
                 return NoContent();
             }
             catch (Exception ex)

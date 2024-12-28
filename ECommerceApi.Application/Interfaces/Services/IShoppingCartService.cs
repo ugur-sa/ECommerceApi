@@ -13,5 +13,6 @@ namespace ECommerceApi.Application.Interfaces.Services
         Task AddItemToShoppingCartAsync(Guid userId, AddShoppingCartDto itemDto);
         Task RemoveItemFromShoppingCartAsync(Guid userId, Guid itemId);
         Task ClearShoppingCartAsync(Guid userId);
+        Task UpdateShoppingCartItemQuantityAsync(Guid guid, Guid itemId, int quantity);
     }
 }
