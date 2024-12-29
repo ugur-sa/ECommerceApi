@@ -26,9 +26,9 @@ namespace ECommerceApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllProducts([FromQuery] PaginationParameters paginationParameters)
         {
-            var products = await _productRepository.GetAllAsync(paginationParameters.PageNumber, paginationParameters.PageSize);
+            var paginatedProducts = await _productRepository.GetAllAsync(paginationParameters.PageNumber, paginationParameters.PageSize);
 
-            var productDtos = products.Data.Select(p => new ProductDto
+            var productDtos = paginatedProducts.Data.Select(p => new ProductDto
             {
                 Id = p.Id,
                 Name = p.Name,
@@ -40,7 +40,14 @@ namespace ECommerceApi.Controllers
                 CategoryName = p.Category.Name
             });
 
-            return Ok(productDtos);
+            var response = new PaginatedResponse<ProductDto>(
+                productDtos,
+                paginatedProducts.TotalCount,
+                paginatedProducts.CurrentPage,
+                paginatedProducts.PageSize
+            );
+
+            return Ok(response);
         }
 
         [HttpGet("{id:guid}")]

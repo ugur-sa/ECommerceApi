@@ -87,7 +87,29 @@ namespace ECommerceApi.Controllers
             // Generate a JWT token
             var token = GenerateJwtToken(user);
 
+            Response.Cookies.Append("jwt", token, new CookieOptions
+            {
+                HttpOnly = true,        // Prevent JavaScript from accessing the cookie
+                Secure = true,          // Only send the cookie over HTTPS
+                SameSite = SameSiteMode.Strict, // Prevent CSRF attacks
+                Expires = DateTime.UtcNow.AddHours(1) // Set cookie expiration
+            });
+
             return Ok(new { Token = token });
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Append("jwt", "", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(-1) // Expire the cookie
+            });
+
+            return Ok(new { Message = "Logged out successfully." });
         }
 
         private string GenerateJwtToken(User user)
@@ -97,9 +119,10 @@ namespace ECommerceApi.Controllers
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.PreferredUsername, user.Username),
+                new Claim("role", user.Role)
             };
 
             var token = new JwtSecurityToken(

@@ -56,6 +56,15 @@ namespace ECommerceApi.Infrastructure.Repositories
                 .FirstOrDefaultAsync(o => o.Id == id);
         }
 
+        public async Task<IEnumerable<Order>> GetAllUserOrdersAsync(Guid userId)
+        {
+            return await _dbContext.Orders
+                .Where(x => x.CustomerId == userId)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .ToListAsync();
+        }
+
         public async Task UpdateAsync(Order order)
         {
             _dbContext.Orders.Update(order);

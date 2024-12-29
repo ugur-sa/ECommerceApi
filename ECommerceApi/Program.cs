@@ -65,13 +65,24 @@ builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("De
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IShoppingCartService, ShoppingCartService>();
 
+//builder.Services.AddCors(options =>
+//{
+//    options.AddDefaultPolicy(policy =>
+//    {
+//        policy.AllowAnyOrigin()
+//              .AllowAnyMethod()
+//              .AllowAnyHeader();
+//    });
+//});
+
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins("http://localhost:3000") // Frontend URL
+              .AllowCredentials()                 // Allow cookies
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
@@ -85,7 +96,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors();
+//app.UseCors();
+app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 

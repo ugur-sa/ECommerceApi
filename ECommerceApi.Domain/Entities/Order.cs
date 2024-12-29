@@ -12,8 +12,10 @@ namespace ECommerceApi.Domain.Entities
         public Guid CustomerId { get; set; }
         public DateTime OrderDate { get; set; }
         public string Status { get; set; } = String.Empty; // e.g., "Pending", "Completed", "Cancelled"
+        public decimal TotalPrice => OrderItems.Sum(item => item.UnitPrice * item.Quantity);
 
         // Navigation property
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
     }
 }

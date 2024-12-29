@@ -55,6 +55,7 @@ namespace ECommerceApi.Services
                 CustomerId = o.CustomerId,
                 OrderDate = o.OrderDate,
                 Status = o.Status,
+                TotalPrice = o.TotalPrice,
                 OrderItems = o.OrderItems.Select(oi => new OrderItemDto
                 {
                     ProductId = oi.ProductId,
@@ -62,6 +63,26 @@ namespace ECommerceApi.Services
                     Quantity = oi.Quantity,
                     UnitPrice = oi.UnitPrice
                 }).ToList()
+            });
+        }
+
+        public async Task<IEnumerable<OrderDto>> GetOrderByUserId(Guid userId)
+        {
+            var orders = await _orderRepository.GetAllUserOrdersAsync(userId);
+            return orders.Select(o => new OrderDto
+            {
+                Id = o.Id,
+                CustomerId = o.CustomerId,
+                OrderDate = o.OrderDate,
+                Status = o.Status,
+                TotalPrice = o.TotalPrice,
+                OrderItems = o.OrderItems.Select(oi => new OrderItemDto
+                {
+                    ProductId = oi.ProductId,
+                    ProductName = oi.Product.Name,
+                    Quantity = oi.Quantity,
+                    UnitPrice = oi.UnitPrice
+                }).ToList(),
             });
         }
 
@@ -76,6 +97,7 @@ namespace ECommerceApi.Services
                 CustomerId = order.CustomerId,
                 OrderDate = order.OrderDate,
                 Status = order.Status,
+                TotalPrice = order.TotalPrice,
                 OrderItems = order.OrderItems.Select(oi => new OrderItemDto
                 {
                     ProductId = oi.ProductId,
