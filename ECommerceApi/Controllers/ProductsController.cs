@@ -146,6 +146,11 @@ namespace ECommerceApi.Controllers
                 product.Price = productDto.Price.Value;
             }
 
+            if (productDto.StockQuantity.HasValue)
+            {
+                product.StockQuantity = productDto.StockQuantity.Value;
+            }
+
             product.UpdatedAt = DateTime.UtcNow;
 
             await _productRepository.UpdateAsync(product);
