@@ -8,11 +8,13 @@ namespace ECommerceApi.Services
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IProductRepository _productRepository;
+        private readonly IShoppingCartRepository _shoppingCartRepository;
 
-        public OrderService(IOrderRepository orderRepository, IProductRepository productRepository)
+        public OrderService(IOrderRepository orderRepository, IProductRepository productRepository, IShoppingCartRepository shoppingCartRepository)
         {
             _orderRepository = orderRepository;
             _productRepository = productRepository;
+            _shoppingCartRepository = shoppingCartRepository;
         }
 
         public async Task<Guid> CreateOrderAsync(CreateOrderDto orderDto)
@@ -22,6 +24,7 @@ namespace ECommerceApi.Services
                 Id = Guid.NewGuid(),
                 CustomerId = orderDto.CustomerId,
                 OrderDate = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
                 Status = "Pending",
                 OrderItems = new List<OrderItem>()
             };
@@ -43,6 +46,8 @@ namespace ECommerceApi.Services
             }
 
             await _orderRepository.AddAsync(order);
+            await _shoppingCartRepository.DeleteAllShoppingCartItemsAsync(order.CustomerId);
+            
             return order.Id;
         }
 
@@ -54,6 +59,7 @@ namespace ECommerceApi.Services
                 Id = o.Id,
                 CustomerId = o.CustomerId,
                 OrderDate = o.OrderDate,
+                UpdatedAt = o.UpdatedAt,
                 Status = o.Status,
                 TotalPrice = o.TotalPrice,
                 OrderItems = o.OrderItems.Select(oi => new OrderItemDto
@@ -74,6 +80,7 @@ namespace ECommerceApi.Services
                 Id = o.Id,
                 CustomerId = o.CustomerId,
                 OrderDate = o.OrderDate,
+                UpdatedAt = o.UpdatedAt,
                 Status = o.Status,
                 TotalPrice = o.TotalPrice,
                 OrderItems = o.OrderItems.Select(oi => new OrderItemDto
@@ -96,6 +103,7 @@ namespace ECommerceApi.Services
                 Id = order.Id,
                 CustomerId = order.CustomerId,
                 OrderDate = order.OrderDate,
+                UpdatedAt = order.UpdatedAt,
                 Status = order.Status,
                 TotalPrice = order.TotalPrice,
                 OrderItems = order.OrderItems.Select(oi => new OrderItemDto

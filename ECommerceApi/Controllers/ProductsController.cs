@@ -151,6 +151,11 @@ namespace ECommerceApi.Controllers
                 product.StockQuantity = productDto.StockQuantity.Value;
             }
 
+            if (productDto.CategoryId is not null)
+            {
+                product.CategoryId = (Guid)productDto.CategoryId;
+            }
+
             product.UpdatedAt = DateTime.UtcNow;
 
             await _productRepository.UpdateAsync(product);

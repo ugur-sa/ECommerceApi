@@ -19,11 +19,21 @@ namespace ECommerceApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto orderDto)
         {
-            // check if customer (user) exists
-            //var customer = 
-
-            var orderId = await _orderService.CreateOrderAsync(orderDto);
-            return CreatedAtAction(nameof(GetOrderById), new { id = orderId }, null);
+            try
+            {
+                var orderId = await _orderService.CreateOrderAsync(orderDto);
+                return CreatedAtAction(nameof(GetOrderById), new { id = orderId }, null);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Return a 400 Bad Request with the exception message
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // For unexpected exceptions, return a 500 Internal Server Error
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
 
         [HttpGet("{id:guid}")]

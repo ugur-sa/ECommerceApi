@@ -34,6 +34,13 @@ namespace ECommerceApi.Infrastructure.Repositories
             }
         }
 
+        public async Task DeleteAllShoppingCartItemsAsync(Guid userId) {
+            var shoppingCart = await GetShoppingCartAsync(userId);
+            if (shoppingCart is null) return;
+            shoppingCart.Items = new List<ShoppingCartItem> { };
+            await UpdateShoppingCartAsync(shoppingCart);
+        }
+
         public async Task<ShoppingCart?> GetShoppingCartAsync(Guid userId)
         {
             return await _dbContext.ShoppingCarts.Include(b => b.Items).FirstOrDefaultAsync(b => b.UserId == userId);
