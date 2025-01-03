@@ -1,6 +1,8 @@
 ﻿using ECommerceApi.Application.Dtos.Order;
 using ECommerceApi.Application.Interfaces;
 using ECommerceApi.Domain.Entities;
+using ECommerceApi.Domain.Enums;
+using Hangfire;
 
 namespace ECommerceApi.Services
 {
@@ -25,7 +27,8 @@ namespace ECommerceApi.Services
                 CustomerId = orderDto.CustomerId,
                 OrderDate = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                Status = "Pending",
+                OrderNumber = GenerateOrderNumber(),
+                Status = OrderStatus.Pending,
                 OrderItems = new List<OrderItem>()
             };
 
@@ -60,6 +63,7 @@ namespace ECommerceApi.Services
                 CustomerId = o.CustomerId,
                 OrderDate = o.OrderDate,
                 UpdatedAt = o.UpdatedAt,
+                OrderNumber = o.OrderNumber,
                 Status = o.Status,
                 TotalPrice = o.TotalPrice,
                 OrderItems = o.OrderItems.Select(oi => new OrderItemDto
@@ -81,6 +85,7 @@ namespace ECommerceApi.Services
                 CustomerId = o.CustomerId,
                 OrderDate = o.OrderDate,
                 UpdatedAt = o.UpdatedAt,
+                OrderNumber = o.OrderNumber,
                 Status = o.Status,
                 TotalPrice = o.TotalPrice,
                 OrderItems = o.OrderItems.Select(oi => new OrderItemDto
@@ -104,6 +109,7 @@ namespace ECommerceApi.Services
                 CustomerId = order.CustomerId,
                 OrderDate = order.OrderDate,
                 UpdatedAt = order.UpdatedAt,
+                OrderNumber = order.OrderNumber,
                 Status = order.Status,
                 TotalPrice = order.TotalPrice,
                 OrderItems = order.OrderItems.Select(oi => new OrderItemDto
@@ -114,6 +120,44 @@ namespace ECommerceApi.Services
                     UnitPrice = oi.UnitPrice
                 }).ToList()
             };
+        }
+
+        public async Task UpdateOrderStatus(Guid orderId)
+        {
+            var order = await _orderRepository.GetByIdAsync(orderId);
+
+            if (order is null) throw new InvalidOperationException("Order not found.");
+
+            var nextStatus = GetNextStatus(order.Status);
+
+            if(nextStatus != order.Status)
+            {
+                order.Status = GetNextStatus(order.Status);
+                order.UpdatedAt = DateTime.UtcNow;
+
+                await _orderRepository.UpdateAsync(order);
+
+                BackgroundJob.Schedule<IOrderService>(
+                    service => service.UpdateOrderStatus(orderId),
+                    TimeSpan.FromMinutes(2));
+            }
+        }
+
+        private OrderStatus GetNextStatus(OrderStatus currentStatus)
+        {
+            return currentStatus switch
+            {
+                OrderStatus.Pending => OrderStatus.Processing,
+                OrderStatus.Processing => OrderStatus.Shipped,
+                OrderStatus.Shipped => OrderStatus.Delivered,
+                _ => currentStatus
+            };
+        }
+        private string GenerateOrderNumber()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return "ORD-" + new string(Enumerable.Repeat(chars, 6)
+                .Select(s => s[new Random().Next(s.Length)]).ToArray());
         }
     }
 }

@@ -31,8 +31,8 @@ namespace ECommerceApi.Controllers
         {
             try
             {
-                await _shoppingCartService.AddItemToShoppingCartAsync(userId, itemDto);
-                return NoContent();
+                var itemId = await _shoppingCartService.AddItemToShoppingCartAsync(userId, itemDto);
+                return Ok(new { itemId });
             }
             catch (Exception ex)
             {

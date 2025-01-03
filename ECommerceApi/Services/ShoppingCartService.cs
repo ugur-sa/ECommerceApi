@@ -39,7 +39,7 @@ namespace ECommerceApi.Services
             };
         }
 
-        public async Task AddItemToShoppingCartAsync(Guid userId, AddShoppingCartDto itemDto)
+        public async Task<Guid> AddItemToShoppingCartAsync(Guid userId, AddShoppingCartDto itemDto)
         {
             var product = await _productRepository.GetByIdAsync(itemDto.ProductId);
             if (product == null) throw new Exception("Product not found");
@@ -50,11 +50,13 @@ namespace ECommerceApi.Services
                 shoppingCart = new ShoppingCart { UserId = userId };
                 await _shoppingCartRepository.AddShoppingCartAsync(shoppingCart);
             }
-
             var existingItem = shoppingCart.Items.FirstOrDefault(i => i.ProductId == itemDto.ProductId);
             if (existingItem != null)
             {
                 existingItem.Quantity += itemDto.Quantity;
+                await _shoppingCartRepository.UpdateShoppingCartAsync(shoppingCart);
+
+                return existingItem.Id;
             }
             else
             {
@@ -68,10 +70,11 @@ namespace ECommerceApi.Services
                 };
                 shoppingCart.Items.Add(newItem);
                 _dbContext.Entry(newItem).State = EntityState.Added;
-            }
 
-            // Pass the updated shopping cart to the repository
-            await _shoppingCartRepository.UpdateShoppingCartAsync(shoppingCart);
+                await _shoppingCartRepository.UpdateShoppingCartAsync(shoppingCart);
+
+                return newItem.Id;
+            }
         }
 
         public async Task ClearShoppingCartAsync(Guid userId)
@@ -108,6 +111,13 @@ namespace ECommerceApi.Services
             }
             else
             {
+                var product = await _productRepository.GetByIdAsync(cartItem.ProductId);
+                if (product is null) return;
+                if(product.StockQuantity < quantity)
+                {
+                    throw new Exception("Not enough stock");
+                }
+
                 // Update the item's quantity
                 cartItem.Quantity = quantity;
             }

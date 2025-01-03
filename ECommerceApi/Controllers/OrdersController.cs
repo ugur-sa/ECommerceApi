@@ -1,5 +1,6 @@
 ﻿using ECommerceApi.Application.Dtos.Order;
 using ECommerceApi.Application.Interfaces;
+using Hangfire;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +23,9 @@ namespace ECommerceApi.Controllers
             try
             {
                 var orderId = await _orderService.CreateOrderAsync(orderDto);
+
+                BackgroundJob.Schedule<IOrderService>(service => service.UpdateOrderStatus(orderId), TimeSpan.FromMinutes(2));
+
                 return CreatedAtAction(nameof(GetOrderById), new { id = orderId }, null);
             }
             catch (InvalidOperationException ex)

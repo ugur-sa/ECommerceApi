@@ -122,6 +122,7 @@ namespace ECommerceApi.Controllers
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.PreferredUsername, user.Username),
+                new Claim(JwtRegisteredClaimNames.Address, user.Address),
                 new Claim("role", user.Role)
             };
 

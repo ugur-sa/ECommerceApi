@@ -31,6 +31,7 @@ namespace ECommerceApi.Controllers
                 Id = u.Id,
                 Email = u.Email,
                 Username = u.Username,
+                Address = u.Address,
                 Role = u.Role
             });
 
@@ -50,6 +51,7 @@ namespace ECommerceApi.Controllers
                 Id = id,
                 Email = user.Email,
                 Username = user.Username,
+                Address = user.Address,
                 Role = user.Role
             };
 
@@ -57,6 +59,7 @@ namespace ECommerceApi.Controllers
         }
 
         [HttpPut("{id:guid}")]
+        [Authorize(Policy = "AdminOrSelf")]
         public async Task<IActionResult> UpdateUser(Guid id, UpdateUserDto userDto)
         {
             if (!ModelState.IsValid)
@@ -64,28 +67,40 @@ namespace ECommerceApi.Controllers
                 return BadRequest(ModelState);
             }
 
+            var userIdClaim = User.FindFirst("sub")?.Value; // Extract the user's ID from the token
+            var isAdmin = User.IsInRole("Admin"); // Check if the user is an admin
+
+            if (!isAdmin && userIdClaim != id.ToString())
+            {
+                // Non-admins can only update their own user data
+                return Forbid();
+            }
+
+            if (!isAdmin && userDto.Role != null)
+            {
+                // Non-admins cannot update the role
+                return BadRequest(new { message = "You are not allowed to change roles." });
+            }
+
             var user = await _userRepository.GetUserById(id);
 
-            if (user == null) return NotFound();
-
-            if(userDto.Email != null)
+            if (user == null)
             {
-                user.Email = userDto.Email;
+                return NotFound();
             }
 
-            if(userDto.Username != null)
-            {
-                user.Username = userDto.Username;
-            }
+            // Update the fields
+            user.Username = userDto.Username ?? user.Username;
+            user.Email = userDto.Email ?? user.Email;
 
-            if (userDto.Role != null)
+            if (isAdmin && userDto.Role != null)
             {
                 user.Role = userDto.Role;
             }
 
             await _userRepository.UpdateUser(user);
 
-            return NoContent();
+            return Ok();
         }
 
         [HttpDelete("{id:guid}")]

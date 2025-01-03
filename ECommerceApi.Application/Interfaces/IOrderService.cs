@@ -13,5 +13,6 @@ namespace ECommerceApi.Application.Interfaces
         Task<OrderDto?> GetOrderByIdAsync(Guid id);
         Task<IEnumerable<OrderDto>> GetAllOrdersAsync();
         Task<IEnumerable<OrderDto>> GetOrderByUserId(Guid userId);
+        Task UpdateOrderStatus(Guid orderId);
     }
 }

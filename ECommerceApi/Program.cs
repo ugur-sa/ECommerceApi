@@ -2,6 +2,7 @@ using ECommerceApi.Application.Interfaces;
 using ECommerceApi.Application.Interfaces.Services;
 using ECommerceApi.Infrastructure;
 using ECommerceApi.Services;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -38,7 +39,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // Add services to the container.
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOrSelf", policy =>
+    policy.RequireAssertion(context =>
+    {
+        var userIdClaim = context.User.FindFirst("sub")?.Value; // Assuming "sub" is the user ID claim
+        var isAdmin = context.User.IsInRole("Admin");
+
+        if (isAdmin)
+        {
+            return true; // Grant access if the user is an Admin
+        }
+
+        // Check if the user ID claim matches the route parameter
+        if (context.Resource is HttpContext httpContext &&
+            Guid.TryParse(httpContext.Request.RouteValues["id"]?.ToString(), out var routeId))
+        {
+            return userIdClaim == routeId.ToString();
+        }
+
+        return false; // Deny access otherwise
+    }));
+});
 builder.Services.AddControllers();
 
 
@@ -78,15 +101,9 @@ builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("De
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IShoppingCartService, ShoppingCartService>();
 
-//builder.Services.AddCors(options =>
-//{
-//    options.AddDefaultPolicy(policy =>
-//    {
-//        policy.AllowAnyOrigin()
-//              .AllowAnyMethod()
-//              .AllowAnyHeader();
-//    });
-//});
+builder.Services.AddHangfire(config =>
+    config.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfireServer();
 
 builder.Services.AddCors(options =>
 {
@@ -111,6 +128,8 @@ if (app.Environment.IsDevelopment())
 
 //app.UseCors();
 app.UseCors("AllowFrontend");
+
+app.UseHangfireDashboard();
 
 app.UseHttpsRedirection();
 
