@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ECommerceApi.Application.Dtos.Product;
+using ECommerceApi.Application.Helpers;
 
 namespace ECommerceApi.Infrastructure.Repositories
 {
@@ -21,21 +23,32 @@ namespace ECommerceApi.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<PaginatedResponse<Product>> GetAllAsync(int pageNumber, int pageSize)
+        public async Task<(IEnumerable<ProductDto> Items, int TotalCount)> GetAllAsync(QueryParameters parameters)
         {
-            //return await _dbContext.Products
-            //    .Include(p => p.Category)
-            //    .Select(p => p)
-            //    .ToListAsync();
-            var totalItems = await _dbContext.Products.CountAsync();
+            var query = _dbContext.Set<Product>().Include(p => p.Category).AsQueryable();
 
-            var items = await _dbContext.Products
-                .Include(p => p.Category) // Ensure the Category is loaded for mapping
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+            // Apply filtering (filtering logic is in ApplyQueryParameters)
+            query = query.ApplyFiltering(parameters);
 
-            return new PaginatedResponse<Product>(items, totalItems, pageNumber, pageSize);
+            // Calculate the total count AFTER filtering but BEFORE pagination
+            var totalCount = await query.CountAsync();
+
+            // Apply sorting and pagination
+            var filteredSortedPagedQuery = query.ApplySorting(parameters).ApplyPagination(parameters);
+
+            var items = await filteredSortedPagedQuery.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                ImageUrl = p.ImageUrl,
+                CategoryName = p.Category.Name,
+                CategoryId = p.CategoryId
+            }).ToListAsync();
+
+            return (items, totalCount);
         }
 
         public async Task<Product?> GetByIdAsync(Guid id)

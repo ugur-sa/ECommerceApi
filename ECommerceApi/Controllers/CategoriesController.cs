@@ -1,12 +1,14 @@
 ﻿using ECommerceApi.Application.Interfaces;
 using ECommerceApi.Domain.Entities;
 using ECommerceApi.Application.Dtos.Category;
+using ECommerceApi.Application.Dtos.Pagination;
 using ECommerceApi.Application.Dtos.Product;
 using ECommerceApi.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ECommerceApi.Infrastructure.Repositories;
 
 namespace ECommerceApi.Controllers
 {
@@ -21,8 +23,8 @@ namespace ECommerceApi.Controllers
             _categoryRepository = categoryRepository;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllCategories()
         {
             var categories = await _categoryRepository.GetAllAsync();
             var categoryDtos = categories.Select(c => new CategoryDto
@@ -33,6 +35,21 @@ namespace ECommerceApi.Controllers
             });
             return Ok(categoryDtos);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCategories([FromQuery] QueryParameters parameters)
+        {
+            var (items, totalCount) = await _categoryRepository.GetPaginatedAsync(parameters);
+
+            return Ok(new
+            {
+                TotalItems = totalCount,
+                PageNumber = parameters.PageNumber,
+                PageSize = parameters.PageSize,
+                Items = items
+            }); ;
+        }
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)

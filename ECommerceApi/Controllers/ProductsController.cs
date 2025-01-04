@@ -24,30 +24,17 @@ namespace ECommerceApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllProducts([FromQuery] PaginationParameters paginationParameters)
+        public async Task<IActionResult> GetAllProducts([FromQuery] QueryParameters parameters)
         {
-            var paginatedProducts = await _productRepository.GetAllAsync(paginationParameters.PageNumber, paginationParameters.PageSize);
+            var (items, totalCount) = await _productRepository.GetAllAsync(parameters);
 
-            var productDtos = paginatedProducts.Data.Select(p => new ProductDto
+            return Ok(new
             {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                StockQuantity = p.StockQuantity,
-                ImageUrl = p.ImageUrl,
-                CategoryId = p.CategoryId,
-                CategoryName = p.Category.Name
+                TotalItems = totalCount,
+                parameters.PageNumber,
+                parameters.PageSize,
+                Items = items
             });
-
-            var response = new PaginatedResponse<ProductDto>(
-                productDtos,
-                paginatedProducts.TotalCount,
-                paginatedProducts.CurrentPage,
-                paginatedProducts.PageSize
-            );
-
-            return Ok(response);
         }
 
         [HttpGet("{id:guid}")]
