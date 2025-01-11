@@ -59,7 +59,7 @@ namespace ECommerceApi.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        [Authorize(Policy = "AdminOrSelf")]
+        [Authorize(Roles = "Admin, User")]
         public async Task<IActionResult> UpdateUser(Guid id, UpdateUserDto userDto)
         {
             if (!ModelState.IsValid)

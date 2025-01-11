@@ -11,7 +11,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var SECRET_KEY = "MY_SUPER_SECRET_KEY_MY_SUPER_SECRET_KEY";
+var jwtOption = builder.Configuration.GetSection("JWTOption");
+var secretKey = jwtOption.GetValue<string>("SecretKey")
+                   ?? throw new InvalidOperationException("SecretKey is null in appsettings.json");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -21,7 +23,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer = false,
             ValidateAudience = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SECRET_KEY))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
         };
 
         options.Events = new JwtBearerEvents
@@ -39,30 +41,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // Add services to the container.
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOrSelf", policy =>
-    policy.RequireAssertion(context =>
-    {
-        var userIdClaim = context.User.FindFirst("sub")?.Value; // Assuming "sub" is the user ID claim
-        var isAdmin = context.User.IsInRole("Admin");
-
-        if (isAdmin)
-        {
-            return true; // Grant access if the user is an Admin
-        }
-
-        // Check if the user ID claim matches the route parameter
-        if (context.Resource is HttpContext httpContext &&
-            Guid.TryParse(httpContext.Request.RouteValues["id"]?.ToString(), out var routeId))
-        {
-            return userIdClaim == routeId.ToString();
-        }
-
-        return false; // Deny access otherwise
-    }));
-});
+builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+
+builder.Services.AddAutoMapper(typeof(Program));
 
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

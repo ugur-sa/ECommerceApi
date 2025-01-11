@@ -1,4 +1,5 @@
-﻿using ECommerceApi.Application.Interfaces;
+﻿using AutoMapper;
+using ECommerceApi.Application.Interfaces;
 using ECommerceApi.Domain.Entities;
 using ECommerceApi.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -16,11 +17,13 @@ namespace ECommerceApi.Controllers
     {
         private readonly IProductRepository _productRepository;
         private readonly ICategoryRepository _categoryRepository;
+        private readonly IMapper _mapper;
 
-        public ProductsController(IProductRepository productRepository, ICategoryRepository categoryRepository)
+        public ProductsController(IProductRepository productRepository, ICategoryRepository categoryRepository, IMapper mapper)
         {
             _productRepository = productRepository;
             _categoryRepository = categoryRepository;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -45,17 +48,7 @@ namespace ECommerceApi.Controllers
             if (product == null)
                 return NotFound();
 
-            var productDtoResult = new ProductDto
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                StockQuantity = product.StockQuantity,
-                ImageUrl = product.ImageUrl,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category.Name
-            };
+            var productDtoResult = _mapper.Map<ProductDto>(product);
 
             return Ok(productDtoResult);
         }
@@ -68,32 +61,12 @@ namespace ECommerceApi.Controllers
             var category = await _categoryRepository.GetByIdAsync(productDto.CategoryId);
             if (category == null)
                 return BadRequest("Invalid category.");
-            
-            var product = new Product
-            {
-                Name = productDto.Name,
-                Description = productDto.Description,
-                Price = productDto.Price,
-                StockQuantity = productDto.StockQuantity,
-                CategoryId = category.Id,
-                ImageUrl = productDto.ImageUrl,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
-            };
+
+            var product = _mapper.Map<Product>(productDto);
 
             await _productRepository.AddAsync(product, category);
 
-            var productDtoResult = new ProductDto
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                StockQuantity = product.StockQuantity,
-                ImageUrl = product.ImageUrl,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category.Name
-            };
+            var productDtoResult = _mapper.Map<ProductDto>(product);
 
             return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, productDtoResult);
         }
